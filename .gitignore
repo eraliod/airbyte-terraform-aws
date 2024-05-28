@@ -1,0 +1,5 @@
+venv/
+.aider*
+.terraform*
+*.tfstate*
+*.tfplan
