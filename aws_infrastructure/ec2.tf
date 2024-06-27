@@ -58,7 +58,7 @@ resource "aws_instance" "ec2_instance" {
   # availability_zone    = "us-east-2b"
   security_groups      = [aws_security_group.airbyte_poc_ec2_sg.name]
   iam_instance_profile = aws_iam_instance_profile.airbyte_poc_ec2_instance_profile.name
-  user_data = file("${path.module}/init.sh") 
+  user_data            = file("${path.module}/init.sh")
   tags = {
     Name = "airbyte-poc-ec2"
   }

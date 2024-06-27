@@ -11,7 +11,7 @@ resource "airbyte_destination_s3" "airbyte_poc_s3_destination" {
   configuration = {
     access_key_id       = data.aws_ssm_parameter.airbyte_poc_user_access_key_id.value
     secret_access_key   = data.aws_ssm_parameter.airbyte_poc_user_secret_access_key.value
-    s3_bucket_name      = 
+    s3_bucket_name      = var.airbyte_poc_s3_bucket
     s3_bucket_region    = "us-east-2"
     s3_bucket_path      = "$${NAMESPACE}"
     s3_filename_pattern = "$${STREAM_NAME}/$${YEAR}_$${MONTH}_$${DAY}"

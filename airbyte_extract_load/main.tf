@@ -1,7 +1,7 @@
 # main terraform file for the airbyte infrastructure
 terraform {
   backend "s3" {
-    bucket         = "airbyte-poc-tf-state"
+    bucket         = "airbyte-poc-tf-state-de"
     key            = "airbyte.tfstate"
     region         = "us-east-2"
     dynamodb_table = "airbyte_poc_tf_state_lock"
@@ -37,23 +37,4 @@ provider "airbyte" {
 
 provider "aws" {
   region = "us-east-2"
-}
-
-variable "workspace_id" {
-  type    = string
-  default = "63c5eb65-2385-4a0a-ac35-bed083e0ac1b"
-}
-
-data "terraform_remote_state" "aws_infrastructure" {
-  backend = "s3"
-  config = {
-    bucket = "airbyte-poc-tf-state"
-    key    = "aws_infrastructure.tfstate"
-    region = "us-east-2"
-  }
-}
-
-variable "airbyte_poc_s3_bucket" {
-  type = string
-  default = data.terraform_remote_state.aws_infrastructure.outputs.bucket_name
 }

@@ -1,6 +1,6 @@
 terraform {
   backend "s3" {
-    bucket         = "airbyte-poc-tf-state"
+    bucket         = "airbyte-poc-tf-state-de"
     key            = "aws_infrastructure.tfstate"
     region         = "us-east-2"
     dynamodb_table = "airbyte_poc_tf_state_lock"
@@ -13,7 +13,7 @@ terraform {
     }
     random = {
       source  = "hashicorp/random"
-      version = "~> 2.0"
+      version = "~> 3.0"
     }
   }
 }
