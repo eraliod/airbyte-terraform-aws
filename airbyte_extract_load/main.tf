@@ -1,7 +1,7 @@
 # main terraform file for the airbyte infrastructure
 terraform {
   backend "s3" {
-    bucket         = "airbyte-poc-tf-state-de"
+    bucket         = "airbyte-poc-tf-state-de"  # your unique bucket id
     key            = "airbyte.tfstate"
     region         = "us-east-2"
     dynamodb_table = "airbyte_poc_tf_state_lock"

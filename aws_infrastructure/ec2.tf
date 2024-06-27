@@ -52,8 +52,18 @@ resource "aws_security_group" "airbyte_poc_ec2_sg" {
   }
 }
 
+# find the latest ami for ec2 amazon-linux instances
+data "aws_ami" "latest" {
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+  owners = ["137112412989"] # Amazon Linux 2
+}
+
 resource "aws_instance" "ec2_instance" {
-  ami           = "ami-019f9b3318b7155c5"
+  ami           = data.aws_ami.latest.id
   instance_type = "t2.medium"
   # availability_zone    = "us-east-2b"
   security_groups      = [aws_security_group.airbyte_poc_ec2_sg.name]
