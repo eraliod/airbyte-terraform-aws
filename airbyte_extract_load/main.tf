@@ -43,3 +43,17 @@ variable "workspace_id" {
   type    = string
   default = "63c5eb65-2385-4a0a-ac35-bed083e0ac1b"
 }
+
+data "terraform_remote_state" "aws_infrastructure" {
+  backend = "s3"
+  config = {
+    bucket = "airbyte-poc-tf-state"
+    key    = "aws_infrastructure.tfstate"
+    region = "us-east-2"
+  }
+}
+
+variable "airbyte_poc_s3_bucket" {
+  type = string
+  default = data.terraform_remote_state.aws_infrastructure.outputs.bucket_name
+}
