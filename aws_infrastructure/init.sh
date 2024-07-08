@@ -17,10 +17,9 @@ timestamp() {
 # Log a message with the current timestamp
 log_message() {
   local message="$1"
-  echo "$(timestamp) : $message" >> "$LOGFILE"
+  echo "$(timestamp) : $message" | tee -a "$LOGFILE"
 }
 
-echo 'starting airbyte installation setup script'
 log_message "starting airbyte installation setup script"
 
 log_message "running yum update"
@@ -49,17 +48,20 @@ chmod +x /usr/local/lib/docker/cli-plugins/docker-compose >> "$LOGFILE" 2>&1
 log_message "testing docker compose - docker compose version: $(docker compose version)"
 log_message "docker compose installation complete"
 
+# configure aws cli, needed for some of the ssm parameter pulls in the next section
+# aws configure set region us-east-2
+
 # Create /etc/profile.d/airbyte_variables.sh to dynamically pull values from AWS SSM Parameter Store
 log_message "creating /etc/profile.d/airbyte_variables.sh"
 echo '#!/bin/bash' | tee /etc/profile.d/airbyte_variables.sh
-echo 'export BASIC_AUTH_USERNAME=data-dolphin-admin' | tee -a /etc/profile.d/airbyte_variables.sh
-echo 'export BASIC_AUTH_PASSWORD=$(aws ssm get-parameter --name /airbyte/poc/server_admin_password --with-decryption --query Parameter.Value --output text)' | tee -a /etc/profile.d/airbyte_variables.sh
+echo 'export BASIC_AUTH_USERNAME=admin' | tee -a /etc/profile.d/airbyte_variables.sh
+echo 'export BASIC_AUTH_PASSWORD=$(aws ssm get-parameter --region us-east-2 --name /airbyte/poc/server_admin_password --with-decryption --query Parameter.Value --output text)' | tee -a /etc/profile.d/airbyte_variables.sh
 echo 'export DATABASE_USER=postgres' | tee -a /etc/profile.d/airbyte_variables.sh
-echo 'export DATABASE_PASSWORD=$(aws ssm get-parameter --name /airbyte/poc/postgres_db_user_password --with-decryption --query Parameter.Value --output text)' | tee -a /etc/profile.d/airbyte_variables.sh
-echo 'export DATABASE_HOST=$(aws ssm get-parameter --name /airbyte/poc/airbyte_poc_postgres_rds_db_endpoint_url --with-decryption --query Parameter.Value --output text)' | tee -a /etc/profile.d/airbyte_variables.sh
+echo 'export DATABASE_PASSWORD=$(aws ssm get-parameter --region us-east-2 --name /airbyte/poc/postgres_db_user_password --with-decryption --query Parameter.Value --output text)' | tee -a /etc/profile.d/airbyte_variables.sh
+echo 'export DATABASE_HOST=$(aws ssm get-parameter --region us-east-2 --name /airbyte/poc/airbyte_poc_postgres_rds_db_endpoint_url --with-decryption --query Parameter.Value --output text)' | tee -a /etc/profile.d/airbyte_variables.sh
 echo 'export DATABASE_PORT=5432' | tee -a /etc/profile.d/airbyte_variables.sh
 echo 'export DATABASE_DB=airbyte' | tee -a /etc/profile.d/airbyte_variables.sh
-echo 'export DATABASE_URL=jdbc:postgresql://$${DATABASE_HOST}:5432/$${DATABASE_DB}' | tee -a /etc/profile.d/airbyte_variables.sh
+echo 'export DATABASE_URL=jdbc:postgresql://${DATABASE_HOST}:5432/${DATABASE_DB}' | tee -a /etc/profile.d/airbyte_variables.sh
 log_message "airbyte_variables.sh created"
 
 log_message "sourcing airbyte_variables.sh"

@@ -3,3 +3,4 @@ venv/
 .terraform*
 *.tfstate*
 *.tfplan
+tfplan

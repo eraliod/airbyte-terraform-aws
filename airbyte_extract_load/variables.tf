@@ -2,7 +2,7 @@
 # it can be found in the url of the airbyte server once you log into it
 variable "workspace_id" {
   type    = string
-  default = "63c5eb65-2385-4a0a-ac35-bed083e0ac1b"
+  default = "f0053ef5-13af-4419-96eb-33491c1616aa"
 }
 
 # save your data bucket name here from the aws_infrastructure project.

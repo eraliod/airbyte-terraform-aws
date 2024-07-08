@@ -29,6 +29,10 @@ resource "aws_iam_role_policy_attachment" "airbyte_poc_ec2_s3_read_only" {
 resource "aws_iam_instance_profile" "airbyte_poc_ec2_instance_profile" {
   name = "airbyte_poc_ec2_instance_profile"
   role = aws_iam_role.airbyte_poc_ec2_ssm_role.name
+  depends_on = [
+    aws_iam_role_policy_attachment.airbyte_poc_ec2_ssm_read_only,
+    aws_iam_role_policy_attachment.airbyte_poc_ec2_s3_read_only,
+    ]
 }
 
 

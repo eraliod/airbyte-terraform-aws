@@ -1,7 +1,7 @@
 # main terraform file for the airbyte infrastructure
 terraform {
   backend "s3" {
-    bucket         = "airbyte-poc-tf-state-de"  # your unique bucket id
+    bucket         = "airbyte-poc-tf-state-de" # your unique bucket id
     key            = "airbyte.tfstate"
     region         = "us-east-2"
     dynamodb_table = "airbyte_poc_tf_state_lock"
@@ -30,7 +30,7 @@ data "aws_ssm_parameter" "airbyte_server_ip" {
 }
 
 provider "airbyte" {
-  username   = "data-dolphin-admin"
+  username   = "admin"
   password   = data.aws_ssm_parameter.airbyte_db_password.value
   server_url = "http://${data.aws_ssm_parameter.airbyte_server_ip.value}:8006/v1"
 }

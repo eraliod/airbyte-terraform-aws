@@ -21,6 +21,7 @@ resource "aws_rds_cluster" "airbyte_postgres_db_rds_cluster" {
   master_username        = "postgres"
   master_password        = data.aws_ssm_parameter.airbyte_poc_postgres_db_user_password.value
   vpc_security_group_ids = [aws_security_group.airbyte_poc_db_sg.id]
+  skip_final_snapshot    = true
   # db_subnet_group_name = "default-vpc-${data.aws_vpc.default.id}"
 }
 

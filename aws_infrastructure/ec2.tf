@@ -76,6 +76,7 @@ resource "aws_instance" "ec2_instance" {
     volume_size = 100
     volume_type = "gp3"
   }
+  # depends_on = [ aws_ssm_parameter.airbyte_poc_postgres_rds_db_endpoint_url ]
 }
 
 # store the ec2 instance ip in ssm parameter store
