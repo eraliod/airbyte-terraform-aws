@@ -5,6 +5,8 @@ data "aws_ssm_parameter" "airbyte_poc_user_access_key_id" {
 data "aws_ssm_parameter" "airbyte_poc_user_secret_access_key" {
   name = "/airbyte/poc/user_secret_access_key"
 }
+
+# create s3 destination for airbyte data
 resource "airbyte_destination_s3" "airbyte_poc_s3_destination" {
   name = "analytics-sandbox S3 destination"
 

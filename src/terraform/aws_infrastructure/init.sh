@@ -9,12 +9,10 @@ LOGFILE="/var/log/init-scripts/airbyte-init.log"
 touch "$LOGFILE"
 chmod 644 "$LOGFILE"
 
-# Format: yyyy-mm-dd hh:mm:ss
 timestamp() {
   date +"%Y-%m-%d %H:%M:%S"
 }
 
-# Log a message with the current timestamp
 log_message() {
   local message="$1"
   echo "$(timestamp) : $message" | tee -a "$LOGFILE"
@@ -44,12 +42,8 @@ log_message "installing docker compose plugin (V2)"
 mkdir -p /usr/local/lib/docker/cli-plugins
 curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/lib/docker/cli-plugins/docker-compose >> "$LOGFILE" 2>&1
 chmod +x /usr/local/lib/docker/cli-plugins/docker-compose >> "$LOGFILE" 2>&1
-# ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose >> "$LOGFILE" 2>&1
 log_message "testing docker compose - docker compose version: $(docker compose version)"
 log_message "docker compose installation complete"
-
-# configure aws cli, needed for some of the ssm parameter pulls in the next section
-# aws configure set region us-east-2
 
 # Create /etc/profile.d/airbyte_variables.sh to dynamically pull values from AWS SSM Parameter Store
 log_message "creating /etc/profile.d/airbyte_variables.sh"
@@ -70,13 +64,12 @@ source /etc/profile.d/airbyte_variables.sh
 sleep 10
 log_message "testing sourcing airbyte_variables.sh - DATABASE_URL: $DATABASE_URL, BASIC_AUTH_USERNAME: $BASIC_AUTH_USERNAME"
 
-# Establish a location for the Airbyte files
+# establish a location for the airbyte files and adjust permissions
 AIRBYTE_DIR="/opt/airbyte"
 mkdir -p "$AIRBYTE_DIR" >> "$LOGFILE" 2>&1
-# Ensure the directory has the appropriate permissions
 chmod -R 775 "$AIRBYTE_DIR" >> "$LOGFILE" 2>&1
 
-# Pull Airbyte and run the docker images
+# pull airbyte and run the docker images
 log_message "pulling airbyte docker image"
 cd "$AIRBYTE_DIR"
 wget https://raw.githubusercontent.com/airbytehq/airbyte/master/run-ab-platform.sh >> "$LOGFILE" 2>&1
@@ -85,5 +78,6 @@ log_message "making run-ab-platform.sh executable"
 chmod +x run-ab-platform.sh
 log_message "downloading docker compose airbyte resources"
 ./run-ab-platform.sh -d >> "$LOGFILE" 2>&1 
-# touch /var/log/init-scripts/run-ab.log
+
+# run the docker compose file
 docker compose up -d

@@ -1,3 +1,5 @@
+# security group allowing ec2 instance to connect to the rds instance, ingress to the airbyte ui and api
+# this security group is far too permissive for anything more than a poc
 resource "aws_security_group" "airbyte_poc_ec2_sg" {
   name        = "airbyte_ec2_sg"
   description = "Allow SSH and Airbyte"
@@ -17,8 +19,8 @@ resource "aws_security_group" "airbyte_poc_ec2_sg" {
   }
   # Airbyte api server
   ingress {
-    from_port   = 8006
-    to_port     = 8006
+    from_port   = 8001
+    to_port     = 8001
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -63,9 +65,8 @@ data "aws_ami" "latest" {
 }
 
 resource "aws_instance" "ec2_instance" {
-  ami           = data.aws_ami.latest.id
-  instance_type = "t2.medium"
-  # availability_zone    = "us-east-2b"
+  ami                  = data.aws_ami.latest.id
+  instance_type        = "t2.medium"
   security_groups      = [aws_security_group.airbyte_poc_ec2_sg.name]
   iam_instance_profile = aws_iam_instance_profile.airbyte_poc_ec2_instance_profile.name
   user_data            = file("${path.module}/init.sh")
@@ -76,12 +77,10 @@ resource "aws_instance" "ec2_instance" {
     volume_size = 100
     volume_type = "gp3"
   }
-  # depends_on = [ aws_ssm_parameter.airbyte_poc_postgres_rds_db_endpoint_url ]
-}
-
-# store the ec2 instance ip in ssm parameter store
-resource "aws_ssm_parameter" "airbyte_poc_ec2_instance_ip" {
-  name  = "/airbyte/poc/ec2_instance_ip"
-  type  = "String"
-  value = aws_instance.ec2_instance.public_ip
+  depends_on = [
+    aws_ssm_parameter.airbyte_poc_postgres_rds_db_endpoint_url,
+  ]
+  provisioner "local-exec" {
+    command = "aws ec2 wait instance-running --instance-ids ${self.id}"
+  }
 }

@@ -1,3 +1,4 @@
+# create a security group to allow connections to the rds instance
 resource "aws_security_group" "airbyte_poc_db_sg" {
   name        = "airbyte_db_sg"
   description = "Allow PostgreSQL"
@@ -9,10 +10,12 @@ resource "aws_security_group" "airbyte_poc_db_sg" {
   }
 }
 
+# get the password for the rds instance from the ssm parameter store
 data "aws_ssm_parameter" "airbyte_poc_postgres_db_user_password" {
   name = "/airbyte/poc/postgres_db_user_password"
 }
 
+# create the rds cluster
 resource "aws_rds_cluster" "airbyte_postgres_db_rds_cluster" {
   cluster_identifier     = "airbyte-poc-rds-cluster"
   engine                 = "aurora-postgresql"
@@ -22,11 +25,6 @@ resource "aws_rds_cluster" "airbyte_postgres_db_rds_cluster" {
   master_password        = data.aws_ssm_parameter.airbyte_poc_postgres_db_user_password.value
   vpc_security_group_ids = [aws_security_group.airbyte_poc_db_sg.id]
   skip_final_snapshot    = true
-  # db_subnet_group_name = "default-vpc-${data.aws_vpc.default.id}"
-}
-
-data "aws_vpc" "default" {
-  default = true
 }
 
 resource "aws_rds_cluster_instance" "airbyte_postgres_db_rds_instance" {
@@ -36,10 +34,10 @@ resource "aws_rds_cluster_instance" "airbyte_postgres_db_rds_instance" {
   engine              = aws_rds_cluster.airbyte_postgres_db_rds_cluster.engine
   engine_version      = aws_rds_cluster.airbyte_postgres_db_rds_cluster.engine_version
   publicly_accessible = false
-  # db_subnet_group_name = "default-${data.aws_vpc.default.id}"
   db_subnet_group_name = "default"
 }
 
+# store the rds endpoint url in the ssm parameter store
 resource "aws_ssm_parameter" "airbyte_poc_postgres_rds_db_endpoint_url" {
   name  = "/airbyte/poc/airbyte_poc_postgres_rds_db_endpoint_url"
   type  = "String"
