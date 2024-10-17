@@ -108,15 +108,3 @@ resource "aws_iam_user_policy_attachment" "airbyte_poc_user_policy_attachment" {
 resource "aws_iam_access_key" "airbyte_poc_user_key" {
   user = aws_iam_user.airbyte_poc_user.name
 }
-
-resource "aws_ssm_parameter" "airbyte_poc_user_access_key_id" {
-  name  = "/airbyte/poc/user_access_key_id"
-  type  = "String"
-  value = aws_iam_access_key.airbyte_poc_user_key.id
-}
-
-resource "aws_ssm_parameter" "airbyte_poc_user_secret_access_key" {
-  name  = "/airbyte/poc/user_secret_access_key"
-  type  = "SecureString"
-  value = aws_iam_access_key.airbyte_poc_user_key.secret
-}

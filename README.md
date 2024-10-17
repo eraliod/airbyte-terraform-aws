@@ -49,7 +49,7 @@ It uses terraform to create all infrastructure as code. This is broken down into
 Note that this primarily meant to serve as a proof of concept (POC) for testing Airbyte. The code is in minimum viable product (MVP) state.
 
 ## Set-Up Instructions
-Skip if you have aws cli and terraform >= v1.9.0 installed and configured
+Skip if you have `aws cli` and `terraform >= v1.9.0` installed and configured
 
 ### Install Prerequisites
 
@@ -60,34 +60,39 @@ Skip if you have aws cli and terraform >= v1.9.0 installed and configured
 - Install terraform cli 
    - brew's default tap is not up-to-date with terraform releases, so please follow the [instructions from hashicorp](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
-### Run Setup
-The design decision to use a remote backend for terraform means that we need some basic infrastructure for terraform to function.
-
-All of this can be accomplished with the script in `src/setup/`
-
-It generates an aws cloudformation stack that contains:
-- a bucket (to store the state file remotely)
-- a dynamodb table (to manage state locks)
-- a role (to connect to the backend programatically)
-- an iam policy (to ensure the role can access the resources it needs)
-
-
-1. Log into the aws cli 
-   - `aws sso login`
-2. run the script 
-   - `./src/setup/tf-manage-backend.sh`
-      - When running the script, *you will need to provide the three arguments in order*
-         - **AppName**: The name of **your** project (ex. "airbyte_poc")
-         - **GithubRepo**: **Your** org/repo where the CI is executing from (ex. "eraliod/airbyte-terraform-aws")
-         - **UniqueBucketId**: A unique identifier for **your** bucket name, since s3 bucket names are globally unique (ex. "de-prod")
-         - ex. `./src/setup/tf-manage-backend.sh airbyte_poc eraliod/airbyte-terraform-aws de-prod`  
-
 ### Define Secrets
-Secrets need to be manually defined somewhere secure. For this project, I used the AWS Parameter Store
-1. Open the AWS Console > System Manager > Parameter Store
-2. Create the following secrets:
+Secrets need to be defined somewhere secure. For this project, I used the AWS Parameter Store
+
    - `/airbyte/poc/server_admin_password` - Password to enter the Airbyte Server UI (running on EC2)
-   - `/airbyte/poc/postgres_db_user_password` - Password for the RDS postgres db our scripts create to serve as a storage for the Airbyte server metadata
+   - `/airbyte/poc/postgres_db_user_password` - Password for the RDS postgres db our scripts create to 
+  
+<details>
+<summary>Programatic method through aws cli</summary>
+
+```sh
+aws ssm put-parameter \
+    --name "/airbyte/poc/server_admin_password" \
+    --value "abcde123" \
+    --type "SecureString" \
+    --overwrite
+```
+```sh
+aws ssm put-parameter \
+    --name "/airbyte/poc/postgres_db_user_password" \
+    --value "abcde123" \
+    --type "SecureString" \
+    --overwrite
+```
+</details>
+<br>
+
+<details>
+<summary>Manual method through aws console / ui</summary>
+
+1. Open the AWS Console > System Manager > Parameter Store
+2. Create the two secrets listed above
+   - Take care to ensure the name of the secret matches (include the forward slashes)
+</details>
 
 ### Run Terraform
 1. Go to the terraform directory
@@ -100,6 +105,17 @@ Secrets need to be manually defined somewhere secure. For this project, I used t
 
 It will take some time for the first run. The longest portion appears to be the rds instance that is used to store the airbyte metadata
 
+### Troubleshooting
+
+Generally speaking, in my experience with Terraform, there are times where it just needs to be re-run. If terraform is configured correctly, it is idempotent. Simply running plan and apply will fix most issues.
+
+#### Known Issues
+**The ec2 instance may fail to initialize properly if the rds instance is not ready.** In that case, we do not need to start over. Simply tell terraform that the ec2 instance needs to be rebuilt:
+
+`terraform taint module.aws_infrastructure.aws_instance.ec2_instance `
+
+Then run terraform plan and apply again
+
 ## Usage
 
 ### Connecto the the Airbyte Server
@@ -110,7 +126,14 @@ The Airbyte server can be accessed via port 8000 in the EC2 instance
    - ex: http://ec2-3-144-179-240.us-east-2.compute.amazonaws.com:8000
 4. Use "admin" as the username along with the password you stored in the parameter store.
 
-## Section Documentation
+Your server will already have a source and destination with a connection ready to go. You may open the connection and click the "sync now" button at the top right. This will populate PyPi data to your s3 destination.
+
+### Next Steps
+Feel free to create connections manually through the UI or explore other terraform connectors from the [airbyte terraform provider](https://registry.terraform.io/providers/airbytehq/airbyte/latest/docs)
+
+Your destination is set up to save tables as csv.gz files. Another step could be to explore loading that data to a database (such as Redshift) or cataloguing it with aws glue to make it querieable by athena.
+
+## Terraform Module Documentation
 
 ### AWS Infrastructure
 Creates all the aws resources needed for the airbyte server to function:
@@ -127,6 +150,12 @@ However, I believe in the value of infrastructure as code (IaC), so the module g
 
 
 ### Optional Configurations
+
+#### Backend
+The `src/terraform/main.tf` file is configured to use a local backend by default. 
+
+This is the easiest method of deployment for the POC. But has shortcomings for durability. There is a separate branch of this project where I am working on adapting an s3 backend and github actions (A setup I am using in other projects but is not ready in this repo)
+
 #### AWS Region
 There are several instances in this project where you will find `us-east-2`. You may change to any region as long as it is consistent throughout the project.
 

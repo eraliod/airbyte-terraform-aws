@@ -15,10 +15,12 @@ module "aws_infrastructure" {
 }
 
 module "airbyte_extract_load" {
-  source                      = "./airbyte_extract_load"
-  airbyte_poc_s3_bucket       = module.aws_infrastructure.airbyte_poc_s3_bucket
-  workspace_id                = module.aws_infrastructure.airbyte_poc_workspace_id
-  airbyte_poc_ec2_instance_ip = module.aws_infrastructure.airbyte_poc_ec2_instance_ip
+  source                             = "./airbyte_extract_load"
+  airbyte_poc_s3_bucket              = module.aws_infrastructure.airbyte_poc_s3_bucket
+  workspace_id                       = module.aws_infrastructure.airbyte_poc_workspace_id
+  airbyte_poc_ec2_instance_ip        = module.aws_infrastructure.airbyte_poc_ec2_instance_ip
+  airbyte_poc_user_access_key_id     = module.aws_infrastructure.airbyte_poc_user_access_key_id
+  airbyte_poc_user_secret_access_key = module.aws_infrastructure.airbyte_poc_user_secret_access_key
 }
 
 # include outputs here to troubleshoot with 'terraform output'

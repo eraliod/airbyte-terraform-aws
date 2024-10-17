@@ -79,6 +79,7 @@ resource "aws_instance" "ec2_instance" {
   }
   depends_on = [
     aws_ssm_parameter.airbyte_poc_postgres_rds_db_endpoint_url,
+    aws_rds_cluster_instance.airbyte_postgres_db_rds_instance
   ]
   provisioner "local-exec" {
     command = "aws ec2 wait instance-running --instance-ids ${self.id}"

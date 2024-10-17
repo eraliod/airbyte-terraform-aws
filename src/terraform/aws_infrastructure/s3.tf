@@ -5,4 +5,5 @@ resource "random_id" "bucket_suffix" {
 
 resource "aws_s3_bucket" "airbyte_poc_s3_bucket" {
   bucket = "airbyte-poc-${random_id.bucket_suffix.hex}"
+  force_destroy = true
 }

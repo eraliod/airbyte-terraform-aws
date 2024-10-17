@@ -8,7 +8,7 @@ resource "null_resource" "wait_for_instance" {
       http_code=$(echo "$response" | tail -c 4)
       if [ "$http_code" == "401" ]; then
         echo "Instance is running!"
-        break
+        exit 0
       else
         echo "Waiting for Airbyte api to start..."
         sleep 10
@@ -36,6 +36,10 @@ data "http" "airbyte_api_workspace" {
     Authorization = "Basic ${base64encode("admin:${data.aws_ssm_parameter.airbyte_server_admin_password.value}")}"
   }
   depends_on = [ null_resource.wait_for_instance ]
+  retry {
+    attempts = 3
+    min_delay_ms = 5000
+  }
 }
 
 # generate ouputs
@@ -48,5 +52,15 @@ output "airbyte_poc_ec2_instance_ip" {
 }
 
 output "airbyte_poc_s3_bucket" {
-  value = aws_s3_bucket.airbyte_poc_s3_bucket.arn
+  value = aws_s3_bucket.airbyte_poc_s3_bucket.id
+}
+
+output "airbyte_poc_user_access_key_id" {
+  value = aws_iam_access_key.airbyte_poc_user_key.id
+  sensitive = true
+}
+
+output "airbyte_poc_user_secret_access_key" {
+  value = aws_iam_access_key.airbyte_poc_user_key.secret
+  sensitive = true
 }
