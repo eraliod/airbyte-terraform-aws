@@ -1,0 +1,54 @@
+name: Terraform Plan and Apply
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - src/terraform/**
+  release:
+    types:
+      - published
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+
+jobs:
+  terraform-apply:
+    name: Terraform Plan and Apply
+    runs-on: self-hosted
+    environment: |-
+      ${{
+         github.event_name == 'push'          && 'analytics-dev'
+      || github.event_name == 'release'       && 'analytics-prod'
+      }}
+    env:
+      TF_VAR_ENV: ${{ vars.TF_VAR_ENV }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: us-east-2
+
+      - name: Set Up pixi Environment
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.28.2
+
+      - name: Terraform Initialize
+        run: pixi run terraform init -backend-config=backends/analytics-${{ vars.TF_VAR_ENV }}.conf
+        working-directory: src/terraform
+
+      - name: Terraform Plan
+        run: pixi run terraform plan --out plan.tfplan
+        working-directory: src/terraform
+
+      - name: Terraform Apply
+        run: pixi run terraform apply plan.tfplan
+        working-directory: src/terraform

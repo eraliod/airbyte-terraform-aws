@@ -1,0 +1,52 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - src/terraform/**
+
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+  pull-requests: write # This is required for commenting on the PR
+
+jobs:
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: self-hosted
+    env:
+      TF_VAR_ENV: ${{ vars.TF_VAR_ENV }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN_DEV }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: us-east-2
+
+      - name: Set Up pixi Environment
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.28.2
+
+      - name: Terraform Initialize
+        run: pixi run terraform init -backend-config=backends/analytics-${{ vars.TF_VAR_ENV }}.conf
+        working-directory: src/terraform
+
+      - name: Terraform Plan
+        run: pixi run terraform plan --out plan.tfplan
+        working-directory: src/terraform
+
+      - name: Add Proposed Changes as Comment
+        uses: borchero/terraform-plan-comment@v2
+        with:
+          token: ${{ github.token }}
+          planfile: plan.tfplan
+          header: Proposed Terraform Plan
+          terraform-cmd: pixi run terraform
+          working-directory: src/terraform
