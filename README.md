@@ -60,6 +60,43 @@ Skip if you have `aws cli` and `terraform >= v1.9.0` installed and configured
 - Install terraform cli 
    - brew's default tap is not up-to-date with terraform releases, so please follow the [instructions from hashicorp](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
+### Run Setup
+There are three options you can choose for this project.
+They are listed in order of lowest to highest effort, and consequently lowest to highest durability.
+<details>
+<summary>
+1. local terraform backend using your aws credentials <i>[default]</i></summary>
+<br>
+The `src/terraform/main.tf` file is configured to use a local backend by default. This is the easiest method of deployment for the POC. But has shortcomings for durability.
+<br>
+<br>
+There is no change needed to continue with this option. Proceed to the next step
+</details>
+<br>
+<details>
+<summary>
+2. remote s3 backend using your aws credentials</summary>
+<br>
+must un-comment the s3 backend and remove the local (or add backend.hcl files, this is a wip)
+</details>
+<br>
+<details>
+<summary>
+3. remote s3 backend utilizing roles for github actions</summary>
+<br>
+must un-comment the s3 backend and remove the local (or add backend.hcl files, this is a wip)
+
+The design decision to use a remote backend for terraform means that we need some basic infrastructure for terraform to function.
+
+All of this can be accomplished with the script in `src/setup/`
+
+It generates an aws cloudformation stack that contains:
+- a bucket (to store the state file remotely)
+- a dynamodb table (to manage state locks)
+- a role (to connect to the backend programatically)
+- an iam policy (to ensure the role can access the resources it needs)
+</details>
+
 ### Define Secrets
 Secrets need to be defined somewhere secure. For this project, I used the AWS Parameter Store
 
@@ -150,11 +187,6 @@ However, I believe in the value of infrastructure as code (IaC), so the module g
 
 
 ### Optional Configurations
-
-#### Backend
-The `src/terraform/main.tf` file is configured to use a local backend by default. 
-
-This is the easiest method of deployment for the POC. But has shortcomings for durability. There is a separate branch of this project where I am working on adapting an s3 backend and github actions (A setup I am using in other projects but is not ready in this repo)
 
 #### AWS Region
 There are several instances in this project where you will find `us-east-2`. You may change to any region as long as it is consistent throughout the project.
