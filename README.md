@@ -156,19 +156,31 @@ Then run terraform plan and apply again
 ## Usage
 
 ### Connecto the the Airbyte Server
-The Airbyte server can be accessed via port 8000 in the EC2 instance
+The Airbyte server can be accessed via port 8000 in the EC2 instance using the password you created in the [Define Secrets](#define-secrets) step and the username: `admin`
+
+One of the outputs fromt the terraform plan or terraform apply step is the `airbyte_dashboard_url`. You can Cmd-click the link to access the Airbyte dashboard
+
+<details>
+<summary>To manually find the ec2 endpoint:</summary>
+
 1. Open the AWS Console > EC2
 2. Find the instance named "airbyte-poc-ec2"
 3. Open the public IP address and add `:8000` to the URL *(Hint: ensure you are using http, not https in the url)*
-   - ex: http://ec2-3-144-179-240.us-east-2.compute.amazonaws.com:8000
+   - ex: http://3.144.179.240:8000
 4. Use "admin" as the username along with the password you stored in the parameter store.
-
+</details>
+<br>
 Your server will already have a source and destination with a connection ready to go. You may open the connection and click the "sync now" button at the top right. This will populate PyPi data to your s3 destination.
 
 ### Next Steps
 Feel free to create connections manually through the UI or explore other terraform connectors from the [airbyte terraform provider](https://registry.terraform.io/providers/airbytehq/airbyte/latest/docs)
 
 Your destination is set up to save tables as csv.gz files. Another step could be to explore loading that data to a database (such as Redshift) or cataloguing it with aws glue to make it querieable by athena.
+
+### Cleanup
+One of the great benefits of infrastructure as code is how easy it is to clean up the resources.
+
+`terraform destroy`
 
 ## Terraform Module Documentation
 
