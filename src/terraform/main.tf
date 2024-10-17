@@ -26,6 +26,7 @@ module "airbyte_extract_load" {
 # include outputs here to troubleshoot with 'terraform output'
 output "aws_infrastructure_outputs" {
   value = {
+    airbyte_dashboard_url       = "http://${module.aws_infrastructure.airbyte_poc_ec2_instance_ip}:8000"
     airbyte_poc_s3_bucket       = module.aws_infrastructure.airbyte_poc_s3_bucket
     airbyte_poc_workspace_id    = module.aws_infrastructure.airbyte_poc_workspace_id
     airbyte_poc_ec2_instance_ip = module.aws_infrastructure.airbyte_poc_ec2_instance_ip
